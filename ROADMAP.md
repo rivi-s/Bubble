@@ -506,7 +506,10 @@ a fixed anchor, so unlike everything else built so far this genuinely
 can't be trusted without a live-client look: does it land in a sane spot
 near the click, does it ever go off-screen near screen edges, does
 click-elsewhere-to-close (`BubblePickerCatcher`, a full-screen invisible
-frame) actually dismiss it cleanly. **Confirmed working live (2026-09-29):
+frame) actually dismiss it cleanly. (**Later removed, 2026-10-04:** that
+catcher swallowed every click while the picker was open, so you couldn't
+type or interact with anything else. The picker now closes itself after 10s
+with the mouse not over it, on Escape, or on picking an icon.) **Confirmed working live (2026-09-29):
 click opens the picker, an icon can be chosen.**
 
 **Regression caught immediately on that same test: hovering the marker

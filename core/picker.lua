@@ -24,33 +24,24 @@ local PADDING = 4
 -- (WoW's |cAARRGGBB alpha byte is effectively ignored for chat text).
 local IDLE_ALPHA = 0.28
 
+-- No click-outside-to-close catcher on purpose: a full-screen mouse frame
+-- swallowed every click (chat box, world, other UI) while the picker was
+-- up, so you couldn't type or interact until you dismissed it. Instead the
+-- picker closes itself after IDLE_CLOSE seconds with the mouse not over it,
+-- picking an icon closes it, and Escape closes it (UISpecialFrames).
+local IDLE_CLOSE = 10
+
 local frame = nil
-local catcher = nil
+local idleElapsed = 0
 local currentKey = nil
 
 local function ClosePicker()
   if frame then frame:Hide() end
-  if catcher then catcher:Hide() end
   currentKey = nil
-end
-
--- A full-screen invisible frame behind the picker, closing it on any
--- click outside it -- the standard vanilla-era pattern for a dismissible
--- popup/menu, since there's no other "click elsewhere to close" primitive.
-local function BuildCatcher()
-  if catcher then return end
-  catcher = CreateFrame("Frame", "BubblePickerCatcher", UIParent)
-  catcher:SetAllPoints(UIParent)
-  catcher:SetFrameStrata("FULLSCREEN")
-  catcher:EnableMouse(true)
-  catcher:Hide()
-  catcher:SetScript("OnMouseDown", ClosePicker)
 end
 
 local function BuildFrame()
   if frame then return end
-  BuildCatcher()
-
   frame = CreateFrame("Frame", "BubblePickerFrame", UIParent)
   frame:SetFrameStrata("FULLSCREEN_DIALOG")
   frame:EnableMouse(true)
@@ -64,7 +55,16 @@ local function BuildFrame()
   frame:SetAlpha(IDLE_ALPHA)
   frame:SetScript("OnEnter", function() frame:SetAlpha(1) end)
   frame:SetScript("OnLeave", function() frame:SetAlpha(IDLE_ALPHA) end)
+  frame:SetScript("OnUpdate", function()
+    if MouseIsOver(frame) then
+      idleElapsed = 0
+      return
+    end
+    idleElapsed = idleElapsed + arg1
+    if idleElapsed >= IDLE_CLOSE then ClosePicker() end
+  end)
   frame:Hide()
+  tinsert(UISpecialFrames, "BubblePickerFrame")
 
   -- Fixed, sorted iteration order -- B.icons is a plain table, and pairs()
   -- gives no ordering guarantee, which would otherwise make the picker's
@@ -118,13 +118,34 @@ end
 function B.picker.Open(key)
   BuildFrame()
   currentKey = key
+  idleElapsed = 0
 
   local scale = UIParent:GetEffectiveScale()
   local x, y = GetCursorPosition()
-  frame:ClearAllPoints()
-  frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+  x, y = x / scale, y / scale
 
-  catcher:Show()
+  -- Centered on the cursor, then clamped so the whole picker stays on
+  -- screen -- a click near the right/top/bottom edge (or the screen's
+  -- left edge) would otherwise open it partly or fully off-screen.
+  local w, h = frame:GetWidth(), frame:GetHeight()
+  --
+  -- CONFIRMED ON LIVE CLIENT (2026-10-04): bounds come from
+  -- GetScreenWidth/Height, NOT UIParent:GetWidth/Height. On the test client
+  -- (UI scale 0.9) UIParent:GetWidth() reported 1228.8 while the real
+  -- visible width in UI units was 1365.3 (GetScreenWidth) -- clamping to
+  -- UIParent's size parked the picker ~136 units short of the right edge.
+  local maxX = GetScreenWidth() - w
+  local maxY = GetScreenHeight() - h
+  local left = x - w / 2
+  local bottom = y - h / 2
+  if left > maxX then left = maxX end
+  if left < 0 then left = 0 end
+  if bottom > maxY then bottom = maxY end
+  if bottom < 0 then bottom = 0 end
+
+  frame:ClearAllPoints()
+  frame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
+
   frame:Show()
   frame:SetAlpha(IDLE_ALPHA)
 end

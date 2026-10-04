@@ -9,7 +9,7 @@ B.chat = {}
 -- real bug, not a cosmetic one. Twemoji's "heavy plus sign" (U+2795,
 -- 2795.svg), converted the same way as every other icon -- see
 -- ROADMAP.md §1.4/README.md "Art credits".
-local MARKER_ICON = "|TInterface\\AddOns\\Bubble\\textures\\add:14|t"
+local MARKER_ICON = "|TInterface\\AddOns\\Bubble\\textures\\add:16|t"
 
 -- ROADMAP §1.1: append a custom hyperlink to every eligible message before
 -- it hits the chat frame, and hook SetItemRef (the dispatcher every
@@ -88,7 +88,13 @@ local function AddMessageWrapper(frame, ...)
     -- emoji at all (`bubble:KEY`, no trailing `:emoji`) -- see
     -- HookSetItemRef below for how that's told apart from a pill's own
     -- `bubble:KEY:emoji` link.
-    arg[1] = text .. " |Hbubble:" .. key .. "|h" .. MARKER_ICON .. "|h"
+    --
+    -- No space before the marker, on purpose: chat only wraps at spaces, so
+    -- " " + a texture escape let the marker land alone as the first thing
+    -- on a wrapped line. Glued to the last word, it wraps WITH that word.
+    -- The visible gap comes from transparent padding baked into
+    -- textures/add.tga instead of a space.
+    arg[1] = text .. "|Hbubble:" .. key .. "|h" .. MARKER_ICON .. "|h"
   end
 
   return frame.BubbleOriginalAddMessage(frame, unpack(arg, 1, arg.n))

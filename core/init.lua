@@ -2,7 +2,7 @@ Bubble = Bubble or {}
 local B = Bubble
 
 B.name = "Bubble"
-B.version = "0.1.1"
+B.version = "0.1.2"
 
 -- Central event dispatch. Every module registers through B.RegisterEvent
 -- instead of calling :RegisterEvent/:SetScript itself, so there's exactly
