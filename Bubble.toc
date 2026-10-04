@@ -1,0 +1,15 @@
+## Interface: 11200
+## Title: Bubble
+## Notes: Emoji/"like" reactions for chat, without typing.
+## Version: 0.1.0
+## SavedVariablesPerCharacter: BubbleCharDB
+
+core\init.lua
+core\identity.lua
+core\config.lua
+core\channel.lua
+core\reactions.lua
+core\picker.lua
+core\overlay.lua
+core\chat.lua
+core\hover.lua
