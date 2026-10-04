@@ -113,3 +113,8 @@ Twemoji's "heavy plus sign") are converted from
 — see `ROADMAP.md` §1.4 for why TGA and how the conversion was verified.
 Twemoji graphics are Copyright 2020 Twitter, Inc and other contributors,
 licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+## License
+
+Code is [MIT](LICENSE). The bundled Twemoji graphics remain under their own
+CC-BY 4.0 license (see [Art credits](#art-credits)).
