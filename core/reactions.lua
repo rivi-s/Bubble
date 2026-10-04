@@ -168,10 +168,25 @@ local function EscapePipes(s)
   return string.gsub(s or "", "|", "||")
 end
 
+-- The raw message text still carries its own markup (player/item links,
+-- color codes, inline textures). Quoted verbatim -- even pipe-escaped --
+-- it shows up as literal "|cffffffff|Hplayer:Bang|h[Bang]|h|r" in the
+-- overlay/pill. Reduce it to what a reader would have seen: a link keeps
+-- its visible label, everything else drops. Done BEFORE truncating so a
+-- cut can't land mid-sequence, and BEFORE EscapePipes so any pipe that
+-- survives (malformed or hostile markup) is still neutralized.
+local function StripMarkup(s)
+  s = string.gsub(s, "|H[^|]*|h(.-)|h", "%1")
+  s = string.gsub(s, "|T[^|]*|t", "")
+  s = string.gsub(s, "|c%x%x%x%x%x%x%x%x", "")
+  s = string.gsub(s, "|r", "")
+  return s
+end
+
 function R.RememberOrigin(key, sender, text)
   TouchKey(key)
   if originOf[key] then return end -- first tag wins; text doesn't change per key
-  local snippet = text
+  local snippet = StripMarkup(text)
   if string.len(snippet) > SNIPPET_MAX then
     snippet = string.sub(snippet, 1, SNIPPET_MAX) .. "..."
   end
